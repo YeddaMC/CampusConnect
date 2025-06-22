@@ -22,11 +22,11 @@ const anunciosData = [
   },
   {
     id: 'a2',
-    title: 'Aluguel de Quartos Próximos ao Campus',
-    description: 'Quartos mobiliados e com internet. Entre em contato pelo WhatsApp.',
+    title: 'Bolo Caseiro',
+    description: 'Deliciosos bolos feitos sob encomenda. Entre em contato pelo WhatsApp.',
     date: '18/05/2025',
-    imageUrl: 'https://via.placeholder.com/400x200/4CAF50/FFFFFF?text=Aluguel+Quartos',
-    whatsappNumber: '5511988888888',
+    imageUrl: 'https://via.placeholder.com/400x200/4CAF50/FFFFFF?text=Bolo+Caseiro',
+    whatsappNumber: '5511988888888', // Número do anunciante no formato internacional
   },
   // ... outros anúncios
 ];

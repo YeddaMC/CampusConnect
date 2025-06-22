@@ -1,12 +1,11 @@
 // src/screens/CadastroScreen.tsx
 
 import React, { useState } from 'react';
-// AQUI: Remova 'StyleSheet' se ele estiver na mesma linha de import do 'react-native'
-// Se a sua importação original era 'import { View, Text, TextInput, Button, StyleSheet, Alert, ActivityIndicator } from 'react-native';'
-// ela deve se tornar: 'import { View, Text, TextInput, Button, Alert, ActivityIndicator } from 'react-native';'
+
 import { View, Text, TextInput, Button, Alert, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { RootStackParamList } from '../navigation/types';
+
 import { cadastroScreenStyles } from '../styles/components/cadastroScreenStyles';
 
 
@@ -185,12 +184,13 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         onPress={() => navigation.navigate('Login')}
         disabled={loading}
       />
+     
       <View style={cadastroScreenStyles.spacer} />
-      <Button
+      {/*<Button
         title="Voltar para Início"
         onPress={() => navigation.navigate('Inicial')}
         disabled={loading}
-      />
+      />*/}
     </View>
   );
 };
