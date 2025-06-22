@@ -1,0 +1,15 @@
+// src\styles\screens\feedAnunciosScreenStyles.ts
+
+import { StyleSheet } from 'react-native';
+// ImportA o tema global
+import { theme } from './globalStyles'; // caminho
+
+export const feedAnunciosScreenStyles = StyleSheet.create({
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: theme.colors.text, // 
+  },
+});
