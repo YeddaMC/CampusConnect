@@ -1,21 +1,13 @@
-// src/screens/CadastroScreen.tsx
-
 import React, { useState } from 'react';
-
 import { View, Text, TextInput, Button, Alert, ActivityIndicator } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 
 import { cadastroScreenStyles } from '../styles/components/cadastroScreenStyles';
 
-
-// IMPORTS DO FIREBASE SDK
 import { auth, db } from '../utils/firebaseService';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-
-// NOVO: Importe os estilos específicos da tela
-
 
 type CadastroScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,6 +20,7 @@ type Props = {
 
 const CadastroScreen: React.FC<Props> = ({ navigation }) => {
   const [nome, setNome] = useState('');
+  const [username, setUsername] = useState('');
   const [cpf, setCpf] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [email, setEmail] = useState('');
@@ -36,40 +29,45 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handleCadastro = async () => {
-    // Validação de campos obrigatórios
-    if (!nome || !cpf || !whatsapp || !email || !password || !confirmPassword) {
+    // Validação campos obrigatórios
+    if (!nome || !username || !cpf || !whatsapp || !email || !password || !confirmPassword) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
-    // Validação de senhas coincidentes
+    // Validação username: mínimo 3 caracteres, sem espaços
+    if (username.length < 3 || /\s/.test(username)) {
+      Alert.alert('Erro', 'Nome de usuário inválido. Mínimo 3 caracteres, sem espaços.');
+      return;
+    }
+
+    // Validação senhas
     if (password !== confirmPassword) {
       Alert.alert('Erro', 'As senhas não coincidem.');
       return;
     }
 
-    // Validação de comprimento mínimo da senha (8 caracteres)
     if (password.length < 8) {
       Alert.alert('Erro', 'A senha deve ter no mínimo 8 caracteres.');
       return;
     }
 
-    // Validação de formato de e-mail
+    // Validação email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Erro', 'Por favor, insira um e-mail válido.');
       return;
     }
 
-    // Validação de CPF (11 dígitos numéricos)
+    // Validação CPF
     if (!/^\d{11}$/.test(cpf)) {
       Alert.alert('Erro', 'Por favor, insira um CPF válido (apenas 11 números).');
       return;
     }
 
-    // Validação de WhatsApp (10 a 15 dígitos numéricos)
+    // Validação WhatsApp
     if (!/^\d{10,15}$/.test(whatsapp)) {
-      Alert.alert('Erro', 'Por favor, insira um número de WhatsApp válido (apenas números, 10 a 15 dígitos).');
+      Alert.alert('Erro', 'Por favor, insira um número de WhatsApp válido (10 a 15 dígitos).');
       return;
     }
 
@@ -77,28 +75,32 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       const nomeUpperCase = nome.toUpperCase();
+      const usernameLowerCase = username.toLowerCase();
 
-      // 1. Cria o usuário no Firebase Authentication
+      // Cria usuário no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 2. Salva os dados adicionais do usuário no Cloud Firestore
+      // Atualiza displayName com o username
+      await updateProfile(user, {
+        displayName: usernameLowerCase,
+      });
+
+      // Salva dados adicionais no Firestore
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         nome: nomeUpperCase,
-        cpf: cpf,
-        whatsapp: whatsapp,
-        email: email,
+        username: usernameLowerCase,
+        cpf,
+        whatsapp,
+        email,
         createdAt: new Date().toISOString(),
       });
 
-      // 3. Mostra o alerta de sucesso e navega
       Alert.alert(
         'Sucesso',
         'Cadastro realizado com sucesso! Agora faça o login.',
-        [{ text: 'OK', onPress: () => {
-            navigation.replace('Login');
-        }}]
+        [{ text: 'OK', onPress: () => navigation.replace('Login') }]
       );
 
     } catch (error: any) {
@@ -124,6 +126,7 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={cadastroScreenStyles.container}>
       <Text style={cadastroScreenStyles.title}>Cadastro</Text>
+
       <TextInput
         style={cadastroScreenStyles.input}
         placeholder="Nome Completo"
@@ -131,6 +134,16 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         onChangeText={setNome}
         editable={!loading}
       />
+
+      <TextInput
+        style={cadastroScreenStyles.input}
+        placeholder="Nome de Usuário (username)"
+        value={username}
+        onChangeText={setUsername}
+        autoCapitalize="none"
+        editable={!loading}
+      />
+
       <TextInput
         style={cadastroScreenStyles.input}
         placeholder="CPF (apenas números)"
@@ -140,6 +153,7 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         editable={!loading}
         maxLength={11}
       />
+
       <TextInput
         style={cadastroScreenStyles.input}
         placeholder="WhatsApp (apenas números)"
@@ -148,6 +162,7 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         keyboardType="phone-pad"
         editable={!loading}
       />
+
       <TextInput
         style={cadastroScreenStyles.input}
         placeholder="E-mail"
@@ -157,6 +172,7 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         autoCapitalize="none"
         editable={!loading}
       />
+
       <TextInput
         style={cadastroScreenStyles.input}
         placeholder="Senha (mínimo 8 caracteres)"
@@ -165,6 +181,7 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         secureTextEntry
         editable={!loading}
       />
+
       <TextInput
         style={cadastroScreenStyles.input}
         placeholder="Confirmar Senha"
@@ -173,24 +190,20 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         secureTextEntry
         editable={!loading}
       />
+
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <Button title="Cadastrar" onPress={handleCadastro} />
       )}
+
       <View style={cadastroScreenStyles.spacer} />
+
       <Button
         title="Já tem conta? Faça Login"
         onPress={() => navigation.navigate('Login')}
         disabled={loading}
       />
-     
-      <View style={cadastroScreenStyles.spacer} />
-      {/*<Button
-        title="Voltar para Início"
-        onPress={() => navigation.navigate('Inicial')}
-        disabled={loading}
-      />*/}
     </View>
   );
 };

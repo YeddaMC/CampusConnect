@@ -14,15 +14,24 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mobile.campusconnect"
+      "bundleIdentifier": "com.mobile.campusconnect",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Este app precisa acessar a câmera para tirar fotos.",
+        "NSPhotoLibraryUsageDescription": "Este app precisa acessar sua galeria para escolher fotos."
+      }
     },
     "android": {
+      "package": "com.mobile.campusconnect",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.mobile.campusconnect"
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"

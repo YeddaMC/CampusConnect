@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  ScrollView,
   View,
   Text,
   Button,
@@ -7,12 +8,19 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
+  TextInput,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { auth } from '../utils/firebaseService';
-import { PerfilStyles } from '../styles/components/PerfilStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
+
+import { getAuth, updatePassword } from 'firebase/auth';
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
+import { PerfilStyles } from '../styles/components/PerfilStyles';
+
+import ExcluirContaModal from '../components/ExcluirContaModal'; // ajuste o caminho se necessário
 
 type PerfilScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -23,104 +31,175 @@ type Props = {
   navigation: PerfilScreenNavigationProp;
 };
 
+const STORAGE_KEY = '@profile_image_uri';
+
 const PerfilScreen: React.FC<Props> = ({ navigation }) => {
-  const [user, setUser] = useState(auth.currentUser);
+  const auth = getAuth();
+  const [user] = useState(auth.currentUser);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Função para escolher imagem da galeria ou câmera
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // Carrega a imagem salva no AsyncStorage ao montar
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const uri = await AsyncStorage.getItem(STORAGE_KEY);
+        if (uri) setImageUri(uri);
+      } catch {
+        // erro ignorado
+      }
+    };
+    loadImage();
+  }, []);
+
+  // Função para pedir permissões e abrir opções
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      Alert.alert('Permissão necessária', 'Permissão para acessar a galeria é necessária.');
-      return;
-    }
+    try {
+      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
-      allowsEditing: true,
-      aspect: [1, 1],
-    });
+      if (cameraStatus !== 'granted' || mediaLibraryStatus !== 'granted') {
+        Alert.alert(
+          'Permissão necessária',
+          'Precisamos de permissão para acessar a câmera e a galeria.'
+        );
+        return;
+      }
 
-    if (!result.canceled && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-      // Aqui você pode implementar o upload da imagem para seu backend ou Firebase Storage
+      Alert.alert(
+        'Selecionar Foto',
+        'Deseja tirar uma foto ou escolher da galeria?',
+        [
+          {
+            text: 'Câmera',
+            onPress: async () => {
+              try {
+                const result = await ImagePicker.launchCameraAsync({
+                  allowsEditing: true,
+                  aspect: [1, 1],
+                  quality: 1,
+                });
+                if (!result.canceled && result.assets.length > 0) {
+                  await saveImageLocally(result.assets[0].uri);
+                }
+              } catch {
+                Alert.alert('Erro', 'Não foi possível abrir a câmera.');
+              }
+            },
+          },
+          {
+            text: 'Galeria',
+            onPress: async () => {
+              try {
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  allowsEditing: true,
+                  aspect: [1, 1],
+                  quality: 1,
+                });
+                if (!result.canceled && result.assets.length > 0) {
+                  await saveImageLocally(result.assets[0].uri);
+                }
+              } catch {
+                Alert.alert('Erro', 'Não foi possível abrir a galeria.');
+              }
+            },
+          },
+          { text: 'Cancelar', style: 'cancel' },
+        ]
+      );
+    } catch {
+      Alert.alert('Erro', 'Falha ao solicitar permissões.');
     }
   };
 
-  // Função para logout
+  // Salva URI da imagem no AsyncStorage e atualiza estado
+  const saveImageLocally = async (uri: string) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, uri);
+      setImageUri(uri);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível salvar a imagem localmente.');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await auth.signOut();
       navigation.replace('Login');
-    } catch (error) {
+    } catch {
       Alert.alert('Erro', 'Não foi possível sair da conta.');
     }
   };
 
-  // Função para excluir conta
-  const handleDeleteAccount = async () => {
-    Alert.alert(
-      'Confirmação',
-      'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (user) {
-                await user.delete();
-                navigation.replace('Login');
-              }
-            } catch (error: any) {
-              Alert.alert('Erro', error.message || 'Não foi possível excluir a conta.');
-            }
-          },
-        },
-      ]
-    );
+  // Agora só abre o modal para exclusão
+  const handleDeleteAccount = () => {
+    setModalVisible(true);
   };
 
-  // Função para alterar senha (simplesmente navega para tela de alteração, que você pode criar)
-  const handleChangePassword = () => {
-    navigation.navigate('AlterarSenha'); // Você pode criar essa tela futuramente
+  // Função chamada após exclusão bem-sucedida pelo modal
+  const handleAccountDeleted = () => {
+    setModalVisible(false);
+    navigation.replace('Login');
   };
 
-  // Função para esqueci senha (envia e-mail de redefinição)
-  const handleForgotPassword = async () => {
-    if (!user?.email) {
-      Alert.alert('Erro', 'Nenhum e-mail associado à conta.');
+  const handleUpdatePassword = async () => {
+    if (newPassword.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres.');
       return;
     }
     setLoading(true);
     try {
-      await auth.sendPasswordResetEmail(user.email);
-      Alert.alert('Sucesso', 'E-mail de redefinição de senha enviado.');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível enviar o e-mail de redefinição.');
+      if (user) {
+        await updatePassword(user, newPassword);
+        Alert.alert('Sucesso', 'Senha alterada com sucesso.');
+        setNewPassword('');
+        setChangingPassword(false);
+      }
+    } catch (error: any) {
+      Alert.alert('Erro', error.message || 'Não foi possível alterar a senha.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={PerfilStyles.container}>
-      <TouchableOpacity onPress={pickImage} style={PerfilStyles.imageContainer}>
+    <ScrollView contentContainerStyle={PerfilStyles.container} keyboardShouldPersistTaps="handled">
+      
+      {/* Botão Voltar no topo */}
+      <TouchableOpacity
+        style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}
+        onPress={() => navigation.goBack()}
+        accessibilityLabel="Voltar"
+      >
+        <Ionicons name="arrow-back" size={24} color="#007AFF" />
+        <Text style={{ color: '#007AFF', fontSize: 18, marginLeft: 5 }}>Voltar</Text>
+      </TouchableOpacity>
+
+      <View style={PerfilStyles.imageContainer}>
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={PerfilStyles.profileImage} />
         ) : (
-          <Image
-            source={require('../assets/user-placeholder.png')}
-            style={PerfilStyles.profileImage}
-          />
+          <View
+            style={[
+              PerfilStyles.profileImage,
+              { justifyContent: 'center', alignItems: 'center', backgroundColor: '#ccc' },
+            ]}
+          >
+            <Ionicons name="person-circle" size={120} color="#888" />
+          </View>
         )}
-        <Text style={PerfilStyles.changePhotoText}>Alterar Foto</Text>
-      </TouchableOpacity>
 
-      <Text style={PerfilStyles.userInfo}>Nome: {user?.displayName || 'Usuário'}</Text>
+        <TouchableOpacity onPress={pickImage} style={PerfilStyles.cameraIconContainer}>
+          <Ionicons name="camera" size={30} color="#555" />
+        </TouchableOpacity>
+      </View>
+
+      <Text style={PerfilStyles.userInfo}> {user?.displayName || 'Usuário'}</Text>
       <Text style={PerfilStyles.userInfo}>E-mail: {user?.email}</Text>
 
       {loading ? (
@@ -131,12 +210,32 @@ const PerfilScreen: React.FC<Props> = ({ navigation }) => {
           <View style={PerfilStyles.spacer} />
           <Button title="Excluir Conta" color="red" onPress={handleDeleteAccount} />
           <View style={PerfilStyles.spacer} />
-          <Button title="Alterar Senha" onPress={handleChangePassword} />
-          <View style={PerfilStyles.spacer} />
-          <Button title="Esqueci Senha" onPress={handleForgotPassword} />
+
+          {changingPassword ? (
+            <>
+              <TextInput
+                placeholder="Nova senha"
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+                style={[PerfilStyles.input, { marginBottom: 10 }]}
+              />
+              <Button title="Confirmar alteração" onPress={handleUpdatePassword} />
+              <View style={PerfilStyles.spacer} />
+              <Button title="Cancelar" color="gray" onPress={() => setChangingPassword(false)} />
+            </>
+          ) : (
+            <Button title="Alterar Senha" onPress={() => setChangingPassword(true)} />
+          )}
         </>
       )}
-    </View>
+
+      <ExcluirContaModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onAccountDeleted={handleAccountDeleted}
+      />
+    </ScrollView>
   );
 };
 
