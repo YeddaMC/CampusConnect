@@ -1,99 +1,56 @@
-// src/components/Footer.tsx
-
 import React from 'react';
-import { View, Linking, Alert } from 'react-native'; // REMOVIDO StyleSheet daqui
-import { Appbar, useTheme } from 'react-native-paper';
-import { CommonActions } from '@react-navigation/native';
-import { signOut } from 'firebase/auth';
-import { auth } from '../utils/firebaseService'; // Importar a instância de autenticação
+import { StyleSheet, TouchableOpacity, Text, Alert, Linking } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
-
-// IMPORTAR O TIPO CORRETO DE NAVEGAÇÃO AQUI
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator'; // Importar RootStackParamList
-
-// IMPORTAR OS ESTILOS DO ARQUIVO SEPARADO
-
-import { footerStyles } from '@styles/components/footerStyles';
-// Definir o tipo para a prop 'navigation' de forma mais específica
-type FooterNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  keyof RootStackParamList //qualquer rota da RootStackParamList
->;
-
-interface FooterProps {
-  navigation: FooterNavigationProp; // Usar o tipo específico aqui
-}
-
-const Footer: React.FC<FooterProps> = ({ navigation }) => {
-  const theme = useTheme();
-
-  const handleWhatsAppPress = () => {
-    const whatsappNumber = '5541999999999';
-    const url = `whatsapp://send?phone=${whatsappNumber}`;
-
+export default function Footer() {
+  const openWhatsApp = () => {
+    const phoneNumber = '5511999999999'; // ajuste para seu número no formato internacional
+    const url = `whatsapp://send?phone=${phoneNumber}`;
     Linking.canOpenURL(url)
-      .then((supported) => {
+      .then(supported => {
         if (!supported) {
-          Alert.alert('Erro', 'WhatsApp não está instalado ou não é possível abrir o link.');
+          Alert.alert('Erro', 'WhatsApp não está instalado no dispositivo');
         } else {
           return Linking.openURL(url);
         }
       })
-      .catch((err) => console.error('Erro ao abrir WhatsApp:', err));
-  };
-
-  const handleLogout = async () => {
-    Alert.alert(
-      'Sair do aplicativo',
-      'Tem certeza que deseja fazer logout?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Sair',
-          onPress: async () => {
-            try {
-              await signOut(auth);
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                })
-              );
-              Alert.alert('Logout', 'Você foi desconectado com sucesso.');
-            } catch (error: any) {
-              console.error('Erro ao fazer logout:', error);
-              Alert.alert('Erro', 'Não foi possível fazer logout. Tente novamente.');
-            }
-          },
-        },
-      ]
-    );
+      .catch(() => Alert.alert('Erro', 'Não foi possível abrir o WhatsApp'));
   };
 
   return (
-    // USANDO footerStyles.bottom AQUI
-    <Appbar style={[footerStyles.bottom, { backgroundColor: theme.colors.primary }]}>
-      <Appbar.Action
-        icon="whatsapp"
-        onPress={handleWhatsAppPress}
-        color="white"
-        size={28}
-      />
-      <Appbar.Content title="" />
-      <Appbar.Action
-        icon="logout"
-        onPress={handleLogout}
-        color="white"
-        size={28}
-      />
-    </Appbar>
+    <LinearGradient
+      colors={['#007AFF', '#00C853']} // gradiente azul para verde
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 0 }}
+      style={styles.container}
+    >
+      <TouchableOpacity style={styles.button} onPress={openWhatsApp} activeOpacity={0.7}>
+        <Ionicons name="logo-whatsapp" size={30} color="#fff" />
+        <Text style={styles.text}>Fale Conosco</Text>
+      </TouchableOpacity>
+    </LinearGradient>
   );
-};
+}
 
-// REMOVIDO TODO  BLOCO 'const styles = StyleSheet.create({...});' DAQUI
-
-export default Footer;
+const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  text: {
+    color: '#fff',
+    fontStyle: 'italic',
+    fontSize: 18,
+    marginLeft: 8,
+  },
+});

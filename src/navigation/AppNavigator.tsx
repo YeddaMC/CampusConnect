@@ -23,6 +23,7 @@ function HeaderRightUserIcon() {
     <TouchableOpacity
       onPress={() => navigation.navigate('Perfil')}
       style={styles.headerButton}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
       <Ionicons name="person-circle" size={35} color="#888" />
     </TouchableOpacity>
@@ -49,8 +50,16 @@ export default function AppNavigator() {
       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Cadastro" component={CadastroScreen} />
-        <Stack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen 
+          name="Perfil" 
+          component={PerfilScreen} 
+          options={{ headerShown: true, title: 'Perfil' }} 
+        />
+        <Stack.Screen 
+          name="MainTabs" 
+          component={MainTabs} 
+          options={{ headerShown: false }}  // Aqui ocultamos o header do Stack para MainTabs
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

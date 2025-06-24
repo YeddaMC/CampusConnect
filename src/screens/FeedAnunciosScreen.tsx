@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, FlatList, TouchableOpacity, Alert, Linking } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { Text as PaperText } from 'react-native-paper';
@@ -10,25 +10,40 @@ import NoticiaCard from '../components/NoticiaCard'; // Reutilizando o card de n
 import { globalStyles } from '../styles/components/globalStyles';
 import { feedAnunciosScreenStyles } from '../styles/components/feedAnunciosScreenStyles';
 
-// Dados de exemplo para anúncios
+// Dados de exemplo para anúncios (unificado e corrigido)
 const anunciosData = [
   {
     id: 'a1',
     title: 'Venda de Livros Usados',
     description: 'Livros de programação e design disponíveis. Contato via WhatsApp.',
     date: '20/05/2025',
-    imageUrl: 'https://via.placeholder.com/400x200/FF5722/FFFFFF?text=Livros+Usados',
-    whatsappNumber: '5511999999999', // Número do anunciante no formato internacional
+    imageUrl: 'https://tse3.mm.bing.net/th?id=OIP.hlg5JnBXmlkgI1AEF6FAKAHaDc&pid=Api&P=0&h=180',
+    whatsappNumber: '5511999999999',
   },
   {
     id: 'a2',
     title: 'Bolo Caseiro',
     description: 'Deliciosos bolos feitos sob encomenda. Entre em contato pelo WhatsApp.',
     date: '18/05/2025',
-    imageUrl: 'https://via.placeholder.com/400x200/4CAF50/FFFFFF?text=Bolo+Caseiro',
-    whatsappNumber: '5511988888888', // Número do anunciante no formato internacional
+    imageUrl: 'https://up.yimg.com/ib/th?id=OIP.DWa-5TgeoelTuAIWZI-YqAHaE8&pid=Api&rs=1&c=1&qlt=95&w=161&h=107',
+    whatsappNumber: '5541984779013',
   },
-  // ... outros anúncios
+  {
+    id: 'a3',
+    title: 'Formatação e Manutenção de PC',
+    description: 'Serviço rápido e confiável de formatação, limpeza e otimização do seu computador. Atendimento presencial e remoto.',
+    date: '22/06/2025',
+    imageUrl: 'https://tse3.mm.bing.net/th?id=OIP.I5F0cXrHNssPVWrOVvT_3wHaDe&pid=Api&P=0&h=180',
+    whatsappNumber: '5511977777777',
+  },
+  {
+    id: 'a4',
+    title: 'Aulas Particulares de Programação',
+    description: 'Aprenda programação do básico ao avançado com aulas personalizadas. Professores experientes e aulas online ou presenciais.',
+    date: '21/06/2025',
+    imageUrl: 'https://tse3.mm.bing.net/th?id=OIP.mjw2SNguF-x1XI99XdP6jgHaEK&pid=Api&P=0&h=180',
+    whatsappNumber: '5511966666666',
+  },
 ];
 
 // Função para abrir WhatsApp com número do anunciante
