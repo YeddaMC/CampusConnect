@@ -1,10 +1,12 @@
 // src/navigation/types.ts
-
 export type RootStackParamList = {
   Login: undefined;
   Cadastro: undefined;
-  Perfil: undefined;  // <-- Adicionado para reconhecer a rota 'Perfil'
+  Perfil: undefined;
   MainTabs: undefined;
-  AlterarSenha: undefined; // Se você tiver essa tela, adicione aqui também
-  // outras rotas que seu app usar
+};
+
+export type MainTabsParamList = {
+  Notícias: undefined;
+  Anúncios: undefined;
 };

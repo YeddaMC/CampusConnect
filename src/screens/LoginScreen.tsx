@@ -1,3 +1,4 @@
+// src/screens/LoginScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,6 +22,9 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { ANDROID_CLIENT_ID, IOS_CLIENT_ID, WEB_CLIENT_ID } from '../utils/firebaseService';
 import { makeRedirectUri } from 'expo-auth-session';
+
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -39,7 +44,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const redirectUri = makeRedirectUri();
 
-  // Adicione revokeAsync para permitir revogar sessão Google
   const [request, response, promptAsync, revokeAsync] = Google.useAuthRequest({
     androidClientId: ANDROID_CLIENT_ID,
     iosClientId: IOS_CLIENT_ID,
@@ -89,12 +93,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [response]);
 
-  // Função que revoga sessão e força escolha de conta no login Google
   const handleGoogleLogin = async () => {
     if (revokeAsync) {
-      await revokeAsync(); // revoga sessão atual para forçar escolha de conta
+      await revokeAsync();
     }
-    promptAsync({ prompt: 'select_account' }); // força tela de escolha de conta
+    promptAsync({ prompt: 'select_account' });
   };
 
   const handleLogin = async () => {
@@ -120,74 +123,87 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        editable={!loading}
-      />
-      <View style={styles.passwordContainer}>
+      <Header showLogo={true} />
+
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}> </Text>
+
         <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="Senha"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!passwordVisible}
+          style={styles.input}
+          placeholder="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
           editable={!loading}
         />
-        <TouchableOpacity
-          onPress={() => setPasswordVisible(!passwordVisible)}
-          style={styles.toggleButton}
-        >
-          <Text style={styles.toggleButtonText}>
-            {passwordVisible ? 'Ocultar' : 'Mostrar'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <>
-          <Button title="Entrar" onPress={handleLogin} />
-          <View style={{ height: 15 }} />
-          <Button
-            title="Entrar com Google"
-            disabled={!request}
-            onPress={handleGoogleLogin}
+
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="Senha"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!passwordVisible}
+            editable={!loading}
           />
-        </>
-      )}
-      <View style={{ height: 15 }} />
-      <Button
-        title="Não tem conta? Cadastre-se"
-        onPress={() => navigation.navigate('Cadastro')}
-        disabled={loading}
-      />
+          <TouchableOpacity
+            onPress={() => setPasswordVisible(!passwordVisible)}
+            style={styles.toggleButton}
+          >
+            <Text style={styles.toggleButtonText}>
+              {passwordVisible ? 'Ocultar' : 'Mostrar'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <>
+            <Button title="Entrar" onPress={handleLogin} />
+            <View style={{ height: 15 }} />
+            <Button title="Entrar com Google" disabled={!request} onPress={handleGoogleLogin} />
+          </>
+        )}
+
+        <View style={{ height: 15 }} />
+
+        <Button
+          title="Não tem conta? Cadastre-se"
+          onPress={() => navigation.navigate('Cadastro')}
+          disabled={loading}
+        />
+      </ScrollView>
+
+      <Footer navigation={navigation} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#fff' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  input: { height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 15, paddingHorizontal: 10, borderRadius: 5 },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
+  container: { flex: 1, backgroundColor: '#fff' },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 80,
   },
-  toggleButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  toggleButtonText: {
-    color: '#007AFF',
+  title: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+  },
+  passwordContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+  toggleButton: { paddingHorizontal: 10, paddingVertical: 6 },
+  toggleButtonText: { color: '#007AFF', fontWeight: 'bold' },
 });
 
 export default LoginScreen;

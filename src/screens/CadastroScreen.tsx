@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, ActivityIndicator } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+} from 'react-native';
 
-import { cadastroScreenStyles } from '../styles/components/cadastroScreenStyles';
+import Header from '../components/Header'; // mesmo Header da tela de anúncios
+import Footer from '../components/Footer'; // mesmo Footer da tela de anúncios
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/AppNavigator'; // ajuste o caminho conforme seu projeto
 
 import { auth, db } from '../utils/firebaseService';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -29,43 +40,32 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const handleCadastro = async () => {
-    // Validação campos obrigatórios
+    // Validações iguais ao seu código
     if (!nome || !username || !cpf || !whatsapp || !email || !password || !confirmPassword) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-
-    // Validação username: mínimo 3 caracteres, sem espaços
     if (username.length < 3 || /\s/.test(username)) {
       Alert.alert('Erro', 'Nome de usuário inválido. Mínimo 3 caracteres, sem espaços.');
       return;
     }
-
-    // Validação senhas
     if (password !== confirmPassword) {
       Alert.alert('Erro', 'As senhas não coincidem.');
       return;
     }
-
     if (password.length < 8) {
       Alert.alert('Erro', 'A senha deve ter no mínimo 8 caracteres.');
       return;
     }
-
-    // Validação email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert('Erro', 'Por favor, insira um e-mail válido.');
       return;
     }
-
-    // Validação CPF
     if (!/^\d{11}$/.test(cpf)) {
       Alert.alert('Erro', 'Por favor, insira um CPF válido (apenas 11 números).');
       return;
     }
-
-    // Validação WhatsApp
     if (!/^\d{10,15}$/.test(whatsapp)) {
       Alert.alert('Erro', 'Por favor, insira um número de WhatsApp válido (10 a 15 dígitos).');
       return;
@@ -77,16 +77,13 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
       const nomeUpperCase = nome.toUpperCase();
       const usernameLowerCase = username.toLowerCase();
 
-      // Cria usuário no Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Atualiza displayName com o username
       await updateProfile(user, {
         displayName: usernameLowerCase,
       });
 
-      // Salva dados adicionais no Firestore
       const userDocRef = doc(db, 'users', user.uid);
       await setDoc(userDocRef, {
         nome: nomeUpperCase,
@@ -102,11 +99,9 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         'Cadastro realizado com sucesso! Agora faça o login.',
         [{ text: 'OK', onPress: () => navigation.replace('Login') }]
       );
-
     } catch (error: any) {
       console.error('Erro ao cadastrar:', error);
       let errorMessage = 'Ocorreu um erro ao tentar realizar o cadastro.';
-
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
       } else if (error.code === 'auth/invalid-email') {
@@ -116,7 +111,6 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
       } else if (error.code === 'auth/network-request-failed') {
         errorMessage = 'Erro de conexão. Verifique sua internet.';
       }
-
       Alert.alert('Erro', errorMessage);
     } finally {
       setLoading(false);
@@ -124,88 +118,120 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <View style={cadastroScreenStyles.container}>
-      <Text style={cadastroScreenStyles.title}>Cadastro</Text>
+    <View style={styles.container}>
+      {/* Reutiliza o Header da tela de anúncios */}
+      <Header title="Cadastro" showLogo={true} />
 
-      <TextInput
-        style={cadastroScreenStyles.input}
-        placeholder="Nome Completo"
-        value={nome}
-        onChangeText={setNome}
-        editable={!loading}
-      />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.title}> </Text>
 
-      <TextInput
-        style={cadastroScreenStyles.input}
-        placeholder="Nome de Usuário (username)"
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-        editable={!loading}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Nome Completo"
+          value={nome}
+          onChangeText={setNome}
+          editable={!loading}
+        />
 
-      <TextInput
-        style={cadastroScreenStyles.input}
-        placeholder="CPF (apenas números)"
-        value={cpf}
-        onChangeText={setCpf}
-        keyboardType="numeric"
-        editable={!loading}
-        maxLength={11}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Nome de Usuário (username)"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+          editable={!loading}
+        />
 
-      <TextInput
-        style={cadastroScreenStyles.input}
-        placeholder="WhatsApp (apenas números)"
-        value={whatsapp}
-        onChangeText={setWhatsapp}
-        keyboardType="phone-pad"
-        editable={!loading}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="CPF (apenas números)"
+          value={cpf}
+          onChangeText={setCpf}
+          keyboardType="numeric"
+          editable={!loading}
+          maxLength={11}
+        />
 
-      <TextInput
-        style={cadastroScreenStyles.input}
-        placeholder="E-mail"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        editable={!loading}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="WhatsApp (apenas números)"
+          value={whatsapp}
+          onChangeText={setWhatsapp}
+          keyboardType="phone-pad"
+          editable={!loading}
+        />
 
-      <TextInput
-        style={cadastroScreenStyles.input}
-        placeholder="Senha (mínimo 8 caracteres)"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        editable={!loading}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="E-mail"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          editable={!loading}
+        />
 
-      <TextInput
-        style={cadastroScreenStyles.input}
-        placeholder="Confirmar Senha"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        editable={!loading}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Senha (mínimo 8 caracteres)"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          editable={!loading}
+        />
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <Button title="Cadastrar" onPress={handleCadastro} />
-      )}
+        <TextInput
+          style={styles.input}
+          placeholder="Confirmar Senha"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+          editable={!loading}
+        />
 
-      <View style={cadastroScreenStyles.spacer} />
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          <Button title="Cadastrar" onPress={handleCadastro} />
+        )}
 
-      <Button
-        title="Já tem conta? Faça Login"
-        onPress={() => navigation.navigate('Login')}
-        disabled={loading}
-      />
+        <View style={{ height: 20 }} />
+
+        <Button
+          title="Já tem conta? Faça Login"
+          onPress={() => navigation.navigate('Login')}
+          disabled={loading}
+        />
+      </ScrollView>
+
+      {/* Reutiliza o Footer da tela de anúncios, passando navigation */}
+      <Footer navigation={navigation} />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 80, // espaço para o footer
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    padding: 10,
+    marginBottom: 15,
+  },
+});
 
 export default CadastroScreen;

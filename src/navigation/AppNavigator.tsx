@@ -1,10 +1,12 @@
+// src/navigation/AppNavigator.tsx
 import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // Importa MaterialCommunityIcons para os ícones das abas
 
+import InicialScreen from '../screens/InicialScreen';
 import LoginScreen from '../screens/LoginScreen';
 import CadastroScreen from '../screens/CadastroScreen';
 import FeedNoticiasScreen from '../screens/FeedNoticiasScreen';
@@ -33,10 +35,22 @@ function HeaderRightUserIcon() {
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
         headerShown: true,
         headerRight: () => <HeaderRightUserIcon />,
-      }}
+        tabBarIcon: ({ color, size }) => {
+          if (route.name === 'Notícias') {
+            // Ícone de jornal para a aba Notícias
+            return <MaterialCommunityIcons name="newspaper" size={size} color={color} />;
+          } else if (route.name === 'Anúncios') {
+            // Ícone de megafone para a aba Anúncios
+            return <MaterialCommunityIcons name="bullhorn" size={size} color={color} />;
+          }
+          return null;
+        },
+        tabBarActiveTintColor: '#007AFF',
+        tabBarInactiveTintColor: 'gray',
+      })}
     >
       <Tab.Screen name="Notícias" component={FeedNoticiasScreen} />
       <Tab.Screen name="Anúncios" component={FeedAnunciosScreen} />
@@ -47,19 +61,12 @@ function MainTabs() {
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Inicial" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Inicial" component={InicialScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Cadastro" component={CadastroScreen} />
-        <Stack.Screen 
-          name="Perfil" 
-          component={PerfilScreen} 
-          options={{ headerShown: true, title: 'Perfil' }} 
-        />
-        <Stack.Screen 
-          name="MainTabs" 
-          component={MainTabs} 
-          options={{ headerShown: false }}  // Aqui ocultamos o header do Stack para MainTabs
-        />
+        <Stack.Screen name="Perfil" component={PerfilScreen} options={{ headerShown: true, title: 'Perfil' }} />
+        <Stack.Screen name="MainTabs" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>
   );

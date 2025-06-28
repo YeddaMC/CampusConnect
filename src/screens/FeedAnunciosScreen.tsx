@@ -87,7 +87,7 @@ const FeedAnunciosScreen: React.FC<Props> = ({ navigation }) => {
       <Header title="Anúncios do Campus" showLogo={true} />
 
       <View style={globalStyles.content}>
-        <PaperText style={feedAnunciosScreenStyles.title}>Anúncios Recentes</PaperText>
+        <PaperText style={feedAnunciosScreenStyles.title}>☺</PaperText>
         <FlatList
           data={anunciosData}
           renderItem={renderItem}

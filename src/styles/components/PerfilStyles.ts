@@ -1,42 +1,50 @@
-// src/styles/components/PerfilStyles.ts
 import { StyleSheet } from 'react-native';
 
 export const PerfilStyles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent', // Para não cobrir o degradê
     alignItems: 'center',
   },
   imageContainer: {
     alignItems: 'center',
     marginBottom: 20,
-    position: 'relative', // Importante para posicionar o ícone da câmera
+    position: 'relative',
   },
-  profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#ccc',
-  },
-  // O estilo cameraIconContainer DEVE estar aqui dentro do objeto
-  cameraIconContainer: { // <<<< ESTA PROPRIEDADE PRECISA ESTAR AQUI
+  // Luz expandida na foto: shadowRadius maior e borderRadius maior que a imagem
+  imageWrapper: {
+  shadowColor: '#00f0ff',        // Cor azul suave da sombra
+  shadowOffset: { width: 0, height: 0 }, // Sem deslocamento para sombra centralizada
+  shadowOpacity: 0.8,             // Aumente para deixar a sombra mais intensa (0 a 1)
+  shadowRadius: 80,               // AUMENTAR para mais luz espalhada
+  elevation: 25,                  // AumentAR para sombra mais forte no Android
+  borderRadius: 80,               // metade do tamanho do container para manter círculo perfeito
+  width: 160,                    // largura do container da sombra (maior que a imagem)
+  height: 160,                   // Altura do container da sombra
+  alignItems: 'center',          // Centraliza a imagem dentro do wrapper
+  justifyContent: 'center',
+  backgroundColor: 'transparent', // Fundo transparente para não cobrir a sombra
+},
+profileImage: {
+  width: 120,
+  height: 120,
+  borderRadius: 60,
+  backgroundColor: '#ccc',
+},
+
+  cameraIconContainer: {
     position: 'absolute',
     bottom: 0,
     right: 10,
     backgroundColor: '#eee',
     borderRadius: 20,
     padding: 5,
-    elevation: 3, // sombra android
-    shadowColor: '#000', // sombra iOS
+    elevation: 3,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
     shadowRadius: 1,
-  },
-  changePhotoText: { // Se não for usar, pode remover
-    marginTop: 8,
-    color: '#007AFF',
-    fontWeight: 'bold',
   },
   userInfo: {
     fontSize: 16,

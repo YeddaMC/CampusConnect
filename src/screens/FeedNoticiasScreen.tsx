@@ -1,7 +1,8 @@
+// src/screens/FeedNoticiasScreen.tsx
 import React from 'react';
 import { View, FlatList, StyleSheet, Linking, Alert, TouchableOpacity } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabsParamList } from '../navigation/types';
 import { Text as PaperText } from 'react-native-paper';
 
 import Header from '../components/Header';
@@ -9,7 +10,6 @@ import Footer from '../components/Footer';
 import NoticiaCard from '../components/NoticiaCard';
 import { theme, globalStyles } from '../styles/components/globalStyles';
 
-// Dados das notícias com campo url para link externo
 const noticiasData = [
   {
     id: '1',
@@ -27,20 +27,16 @@ const noticiasData = [
     imageUrl: 'https://tse2.mm.bing.net/th?id=OIP.RB0YPUCwyMG3N0BYa6D0OwHaE3&pid=Api&P=0&h=180',
     url: 'https://ifpr.edu.br/menu-academico/calendario-academico/',
   },
-
   {
-  id: '3',
-  title: 'Conheça a Biblioteca do Campus Pinhais',
-  description: 'Convidamos todos os alunos a conhecer e usufruir do espaço da Biblioteca do IFPR Pinhais, um ambiente acolhedor para estudos, pesquisas e leitura.',
-  date: '23/06/2025',
-  imageUrl: 'https://ifpr.edu.br/wp-content/uploads/2024/02/bib_pinhais-1536x864.png',
-  url: 'https://ifpr.edu.br/rede-de-bibliotecas-do-ifpr/nossas-bibliotecas/biblioteca-pinhais/',
-}
-
-  // ... demais notícias com url (sem a notícia 3)
+    id: '3',
+    title: 'Conheça a Biblioteca do Campus Pinhais',
+    description: 'Convidamos todos os alunos a conhecer e usufruir do espaço da Biblioteca do IFPR Pinhais, um ambiente acolhedor para estudos, pesquisas e leitura.',
+    date: '23/06/2025',
+    imageUrl: 'https://ifpr.edu.br/wp-content/uploads/2024/02/bib_pinhais-1536x864.png',
+    url: 'https://ifpr.edu.br/rede-de-bibliotecas-do-ifpr/nossas-bibliotecas/biblioteca-pinhais/',
+  },
 ];
 
-// Função para abrir link externo com tratamento de erros
 const openExternalLink = (url: string) => {
   Linking.canOpenURL(url)
     .then(supported => {
@@ -53,9 +49,9 @@ const openExternalLink = (url: string) => {
     .catch(() => Alert.alert('Erro', 'Não foi possível abrir o link'));
 };
 
-type FeedNoticiasScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'FeedNoticias'
+type FeedNoticiasScreenNavigationProp = BottomTabNavigationProp<
+  MainTabsParamList,
+  'Notícias'
 >;
 
 type Props = {
@@ -76,7 +72,7 @@ const FeedNoticiasScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={globalStyles.container}>
-      <Header title="Notícias do Campus" showLogo={true} />
+      <Header title="  " showLogo={true} />
 
       <View style={globalStyles.content}>
         <PaperText style={styles.title}>Últimas Notícias</PaperText>
