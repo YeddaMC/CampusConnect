@@ -1,9 +1,9 @@
-// src/navigation/types.ts
 export type RootStackParamList = {
   Login: undefined;
   Cadastro: undefined;
-  Perfil: undefined;
   MainTabs: undefined;
+  Perfil: undefined;
+  Inicial: undefined;
 };
 
 export type MainTabsParamList = {

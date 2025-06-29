@@ -1,4 +1,3 @@
-// src/screens/LoginScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -15,18 +14,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 
-import { auth } from '../utils/firebaseService';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { ANDROID_CLIENT_ID, IOS_CLIENT_ID, WEB_CLIENT_ID } from '../utils/firebaseService';
-import { makeRedirectUri } from 'expo-auth-session';
-
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
-WebBrowser.maybeCompleteAuthSession();
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -35,87 +24,49 @@ type Props = {
 };
 
 const STORAGE_EMAIL_KEY = '@campusconnect_email';
+const STORAGE_USERS_KEY = '@campusconnect_users'; // novo para múltiplos usuários
+const STORAGE_CPF_KEY = '@campusconnect_cpf'; // para lembrar o último CPF logado
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [email, setEmail] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  const redirectUri = makeRedirectUri();
-
-  const [request, response, promptAsync, revokeAsync] = Google.useAuthRequest({
-    androidClientId: ANDROID_CLIENT_ID,
-    iosClientId: IOS_CLIENT_ID,
-    webClientId: WEB_CLIENT_ID,
-    redirectUri,
-    scopes: ['profile', 'email'],
-  });
-
   useEffect(() => {
     (async () => {
       try {
-        const savedEmail = await AsyncStorage.getItem(STORAGE_EMAIL_KEY);
-        if (savedEmail) {
-          setEmail(savedEmail);
+        const savedCpf = await AsyncStorage.getItem(STORAGE_CPF_KEY);
+        if (savedCpf) {
+          setCpf(savedCpf);
         }
       } catch (e) {
-        console.warn('Erro ao carregar email salvo', e);
+        console.warn('Erro ao carregar CPF salvo', e);
       }
     })();
   }, []);
 
-  useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      if (!authentication) {
-        Alert.alert('Erro', 'Autenticação Google falhou: dados ausentes');
-        return;
-      }
-
-      const { idToken, accessToken } = authentication;
-      const credential = idToken
-        ? GoogleAuthProvider.credential(idToken)
-        : GoogleAuthProvider.credential(null, accessToken);
-
-      setLoading(true);
-      signInWithCredential(auth, credential)
-        .then(() => {
-          navigation.replace('MainTabs', { screen: 'Notícias' });
-        })
-        .catch((error) => {
-          console.error('Erro no login Google:', error);
-          Alert.alert('Erro', 'Não foi possível fazer login com o Google.');
-        })
-        .finally(() => setLoading(false));
-    } else if (response?.type === 'error') {
-      Alert.alert('Erro', 'Login com Google cancelado ou falhou.');
-    }
-  }, [response]);
-
-  const handleGoogleLogin = async () => {
-    if (revokeAsync) {
-      await revokeAsync();
-    }
-    promptAsync({ prompt: 'select_account' });
-  };
-
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Erro', 'Preencha e-mail e senha.');
+    if (!cpf || !password) {
+      Alert.alert('Erro', 'Preencha CPF e senha.');
       return;
     }
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      await AsyncStorage.setItem(STORAGE_EMAIL_KEY, email);
-      navigation.replace('MainTabs', { screen: 'Notícias' });
-    } catch (error: any) {
-      let message = 'Erro ao fazer login.';
-      if (error.code === 'auth/invalid-email') message = 'E-mail inválido.';
-      else if (error.code === 'auth/user-not-found') message = 'Usuário não encontrado.';
-      else if (error.code === 'auth/wrong-password') message = 'Senha incorreta.';
-      Alert.alert('Erro', message);
+      const usersData = await AsyncStorage.getItem(STORAGE_USERS_KEY);
+      const users = usersData ? JSON.parse(usersData) : [];
+      const user = users.find((u: any) => u.cpf === cpf && u.password === password);
+      if (user) {
+        await AsyncStorage.setItem(STORAGE_CPF_KEY, cpf);
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
+      } else {
+        Alert.alert('Erro', 'CPF ou senha incorretos.');
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Erro ao fazer login.');
     } finally {
       setLoading(false);
     }
@@ -123,21 +74,19 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header showLogo={true} />
-
+      <Header showLogo={true} title="Campus Connect" />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}> </Text>
-
         <TextInput
           style={styles.input}
-          placeholder="E-mail"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
+          placeholder="CPF (apenas números)"
+          value={cpf}
+          onChangeText={setCpf}
+          keyboardType="numeric"
           autoCapitalize="none"
           editable={!loading}
+          maxLength={11}
         />
-
         <View style={styles.passwordContainer}>
           <TextInput
             style={[styles.input, { flex: 1 }]}
@@ -156,27 +105,17 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
         </View>
-
         {loading ? (
           <ActivityIndicator size="large" color="#0000ff" />
         ) : (
           <>
             <Button title="Entrar" onPress={handleLogin} />
             <View style={{ height: 15 }} />
-            <Button title="Entrar com Google" disabled={!request} onPress={handleGoogleLogin} />
+            <Button title="Não tem conta? Cadastre-se" onPress={() => navigation.navigate('Cadastro')} disabled={loading} />
           </>
         )}
-
-        <View style={{ height: 15 }} />
-
-        <Button
-          title="Não tem conta? Cadastre-se"
-          onPress={() => navigation.navigate('Cadastro')}
-          disabled={loading}
-        />
       </ScrollView>
-
-      <Footer navigation={navigation} />
+      <Footer />
     </View>
   );
 };

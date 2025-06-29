@@ -75,7 +75,7 @@ const FeedNoticiasScreen: React.FC<Props> = ({ navigation }) => {
       <Header title="  " showLogo={true} />
 
       <View style={globalStyles.content}>
-        <PaperText style={styles.title}>Últimas Notícias</PaperText>
+        <PaperText style={styles.title}>☺</PaperText>
         <FlatList
           data={noticiasData}
           renderItem={renderItem}

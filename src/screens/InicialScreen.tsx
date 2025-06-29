@@ -1,17 +1,16 @@
-import React, { useRef, useEffect } from 'react';
-import { Animated, View, Text, StyleSheet, Dimensions, Easing } from 'react-native'; // animações, dimensões, easing
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; // ícones vetoriais
+// INICIAL EXCLUIDA
+import { useRef, useEffect } from 'react';
+import { Animated, View, Text, StyleSheet, Dimensions, Easing } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { height, width } = Dimensions.get('window'); // dimensões da tela
 
-const WELCOME_LINES = [ // frases separadas para renderizar
+const WELCOME_LINES = [
   'Bem-vindo!',
-  'Que a sua jornada seja memoravel',
-  
+  'Que a sua jornada seja memorável.',
   'Bora crescer juntos?',
-
   'O futuro começa aqui.'
-];
+]; // frases separadas para renderizar
 
 export default function InicialScreen({ navigation }: any) {
   const animatedValue = useRef(new Animated.Value(height * 0.3)).current; // posição vertical inicial do texto

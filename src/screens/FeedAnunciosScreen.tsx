@@ -44,6 +44,22 @@ const anunciosData = [
     imageUrl: 'https://tse3.mm.bing.net/th?id=OIP.mjw2SNguF-x1XI99XdP6jgHaEK&pid=Api&P=0&h=180',
     whatsappNumber: '5511966666666',
   },
+  {
+    id: 'a5',
+    title: 'Notebook com Pouco Uso',
+    description: 'Vendo notebook com pouco uso. Interessados chamar no WhatsApp.',
+    date: '19/05/2025',
+    imageUrl: 'https://tse3.mm.bing.net/th/id/OIP.7Ni7A92p963N9huvmTzDggHaEh?pid=Api&P=0&h=180',
+    whatsappNumber: '5511912345678',
+  },
+  {
+    id: 'a6',
+    title: 'Docinhos e Salgadinhos',
+    description: 'Docinhos e salgadinhos sob encomenda. Peça pelo WhatsApp ou fale com Amanda na sala 10.',
+    date: '17/05/2025',
+    imageUrl: 'https://tse3.mm.bing.net/th/id/OIP.bwih3bWJh1pAdbds4oGzHQHaHa?pid=Api&P=0&h=180',
+    whatsappNumber: '5541998765432',
+  },
 ];
 
 // Função para abrir WhatsApp com número do anunciante

@@ -1,8 +1,17 @@
 //src\styles\components\ErrorBoundary.tsx
 import React from 'react';
+import { View, Text } from 'react-native';
 
-class ErrorBoundary extends React.Component {
-  state = { hasError: false };
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  state: ErrorBoundaryState = { hasError: false };
 
   static getDerivedStateFromError(error: any) {
     return { hasError: true };
@@ -14,7 +23,11 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return <h1>Algo deu errado. Por favor, tente novamente mais tarde.</h1>;
+      return (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Text>Algo deu errado. Por favor, tente novamente mais tarde.</Text>
+        </View>
+      );
     }
     return this.props.children;
   }
