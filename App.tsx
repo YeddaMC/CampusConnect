@@ -1,4 +1,3 @@
-import React from 'react';
 import AppNavigator from './src/navigation/AppNavigator';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ErrorBoundary from './src/styles/components/ErrorBoundary';
@@ -6,7 +5,7 @@ import ErrorBoundary from './src/styles/components/ErrorBoundary';
 
 export default function App() {
   return (
-    <ErrorBoundary> {/* Envolva tudo com ErrorBoundary */}
+    <ErrorBoundary> {/* envoltorio ErrorBoundary */}
       <SafeAreaProvider>
         <AppNavigator />
       </SafeAreaProvider>

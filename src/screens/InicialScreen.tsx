@@ -9,7 +9,7 @@ const WELCOME_LINES = [
   'Que a sua jornada seja memorável.',
   'Bora crescer juntos?',
   'O futuro começa aqui.'
-];
+]; // frases separadas para renderizar
 
 export default function InicialScreen({ navigation }: any) {
   const animatedValue = useRef(new Animated.Value(height * 0.3)).current;

@@ -1,5 +1,5 @@
 // src/components/SenhaModal.tsx
-import React, { useState } from 'react'; // Importa hooks do React
+import { useState } from 'react'; // Importa hooks do React
 import {
   Modal, // Componente de modal
   View, // Container genérico
@@ -65,143 +65,129 @@ const SenhaModal: React.FC<Props> = ({ visible, onClose, onPasswordChanged, modo
       onClose(); // Fecha o modal
       return; // Sai da função
     }
-
-    if (!newPassword || !confirmPassword) { // Se algum campo estiver vazio
-      Alert.alert('Erro', 'Preencha todos os campos.'); // Alerta para preencher campos
-      return; // Sai da função
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Erro', 'As senhas não coincidem.');
+      return;
     }
-    if (newPassword !== confirmPassword) { // Se nova senha e confirmação não coincidem
-      Alert.alert('Erro', 'A nova senha e a confirmação não coincidem.'); // Alerta de erro
-      return; // Sai da função
+    if (newPassword.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter no mínimo 6 caracteres.');
+      return;
     }
-    if (newPassword.length < 4) { // Se nova senha tiver menos de 4 caracteres
-      Alert.alert('Erro', 'A nova senha deve ter pelo menos 4 caracteres.'); // Alerta de erro
-      return; // Sai da função
-    }
-
-    setLoading(true); // Inicia o carregamento
-    try { // Tenta alterar senha
-      // Não é mais necessário reautenticar com a senha antiga.
-      // Apenas atualizamos a nova senha diretamente no usuário logado.
-      await updatePassword(user, newPassword); // Atualiza a senha no Firebase
-
-      Alert.alert('Sucesso', 'Senha alterada com sucesso!'); // Alerta de sucesso
-
-      setNewPassword(''); // Limpa campo de nova senha
-      setConfirmPassword(''); // Limpa campo de confirmação de senha
-      onPasswordChanged(); // Notifica o componente pai
-      onClose(); // Fecha o modal
-    } catch (error: any) { // Captura erros
-      console.error('Erro ao alterar senha:', error); // Loga o erro no console - ESTE É O ERRO QUE PRECISAMOS!
-      let errorMessage = 'Não foi possível alterar a senha.'; // Mensagem de erro padrão
-      if (error.code === 'auth/requires-recent-login') { // Sessão expirada
-        errorMessage = 'Sua sessão expirou. Por favor, faça login novamente para alterar sua senha.';
-        // Você pode considerar deslogar o usuário ou redirecioná-lo para a tela de login aqui
-      } else if (error.message) { // Outra mensagem de erro do Firebase
-        errorMessage = error.message;
+    setLoading(true);
+    try {
+      await updatePassword(user, newPassword);
+      Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+      setNewPassword('');
+      setConfirmPassword('');
+      onPasswordChanged();
+      onClose();
+    } catch (error: any) {
+      let errorMessage = 'Não foi possível alterar a senha.';
+      if (error.code === 'auth/requires-recent-login') {
+        errorMessage = 'Por segurança, faça login novamente para alterar a senha.';
       }
-      Alert.alert('Erro', errorMessage); // Exibe alerta de erro
-    } finally { // Finaliza a execução (com ou sem erro)
-      setLoading(false); // Termina o carregamento
+      Alert.alert('Erro', errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return ( // Renderização do componente
-    <Modal // Componente de modal
-      visible={visible} // Visibilidade do modal
-      animationType="slide" // Tipo de animação
-      transparent={true} // Fundo transparente
-      onRequestClose={onClose} // Fecha modal ao apertar botão de voltar (Android)
-    >
-      <KeyboardAvoidingView // Ajusta a tela para o teclado
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} // Comportamento (padding para iOS)
-        style={styles.modalBackground} // Estilo de fundo do modal
+  return (
+    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.centeredView}
       >
-        <View style={styles.modalContainer}> {/* Container interno do modal */}
-          <Text style={styles.title}>{modoEsqueciSenha ? 'Redefinir Senha' : 'Alterar Senha'}</Text> {/* Título do modal */}
+        <View style={styles.modalView}>
+          <Text style={styles.modalTitle}>{modoEsqueciSenha ? 'Redefinir Senha' : 'Alterar Senha'}</Text>
           {modoEsqueciSenha ? (
-            <TextInput
-              placeholder="E-mail cadastrado" // Placeholder
-              value={email} // Valor do campo
-              onChangeText={setEmail} // Atualiza estado ao digitar
-              style={styles.input} // Estilo do input
-              autoCapitalize="none" // Desabilita capitalização automática
-              keyboardType="email-address" // Tipo de teclado para e-mail
-              editable={!loading} // Desabilita input durante o carregamento
-            />
-          ) : (
-            <> {/* Fragmento vazio para agrupar múltiplos filhos */}
-              <TextInput // Campo de nova senha
-                placeholder="Nova senha" // Placeholder
-                secureTextEntry // Esconde o texto
-                value={newPassword} // Valor do campo
-                onChangeText={setNewPassword} // Atualiza estado ao digitar
-                style={styles.input} // Estilo do input
-                autoCapitalize="none" // Desabilita capitalização automática
-                textContentType="newPassword" // Tipo de conteúdo para autofill
-                editable={!loading} // Desabilita input durante o carregamento
+            <>
+              <Text style={styles.label}>E-mail cadastrado:</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Digite seu e-mail"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
               />
-
-              <TextInput // Campo de confirmação de nova senha
-                placeholder="Confirme a nova senha" // Placeholder
-                secureTextEntry // Esconde o texto
-                value={confirmPassword} // Valor do campo
-                onChangeText={setConfirmPassword} // Atualiza estado ao digitar
-                style={styles.input} // Estilo do input
-                autoCapitalize="none" // Desabilita capitalização automática
-                textContentType="newPassword" // Tipo de conteúdo para autofill
-                editable={!loading} // Desabilita input durante o carregamento
+            </>
+          ) : (
+            <>
+              <Text style={styles.label}>Nova senha:</Text>
+              <TextInput
+                style={styles.input}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Digite a nova senha"
+                secureTextEntry
+              />
+              <Text style={styles.label}>Confirmar nova senha:</Text>
+              <TextInput
+                style={styles.input}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Confirme a nova senha"
+                secureTextEntry
               />
             </>
           )}
-
-          <View style={styles.buttons}> {/* Container dos botões */}
-            <Button title="Cancelar" color="gray" onPress={onClose} disabled={loading} /> {/* Botão Cancelar */}
-            <Button // Botão Confirmar
-              title={loading ? 'Confirmando...' : 'Confirmar'} // Título dinâmico (carregando/confirmar)
-              onPress={handleChangePassword} // Ação de alterar senha
-              disabled={loading} // Desabilita botão durante o carregamento
+          {loading ? (
+            <ActivityIndicator size="large" color="#007AFF" />
+          ) : (
+            <Button
+              title={modoEsqueciSenha ? 'Enviar e-mail de redefinição' : 'Alterar Senha'}
+              onPress={handleChangePassword}
+              color="#007AFF"
             />
-          </View>
-          {loading && <ActivityIndicator size="small" color="#0000ff" style={{ marginTop: 10 }} />} {/* Indicador de carregamento */}
+          )}
+          <Button title="Cancelar" onPress={onClose} color="#888" />
         </View>
       </KeyboardAvoidingView>
     </Modal>
   );
 };
 
-const styles = StyleSheet.create({ // Definição dos estilos
-  modalBackground: { // Estilo de fundo do modal
-    flex: 1, // Preenchimento total
-    backgroundColor: 'rgba(0,0,0,0.5)', // Fundo semi-transparente
-    justifyContent: 'center', // Alinha conteúdo ao centro (vertical)
-    alignItems: 'center', // Alinha conteúdo ao centro (horizontal)
+const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  modalContainer: { // Container interno do modal
-    width: '90%', // Largura
-    backgroundColor: 'white', // Cor de fundo
-    borderRadius: 8, // Borda arredondada
-    padding: 20, // Preenchimento interno
-    elevation: 10, // Sombra (Android)
+  modalView: {
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'stretch',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  title: { // Estilo do título
-    fontSize: 22, // Tamanho da fonte
-    fontWeight: 'bold', // Peso da fonte
-    marginBottom: 20, // Margem inferior
-    textAlign: 'center', // Alinhamento do texto
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#007AFF',
+    textAlign: 'center',
   },
-  input: { // Estilo dos campos de input
-    borderWidth: 1, // Largura da borda
-    borderColor: '#ccc', // Cor da borda
-    borderRadius: 6, // Borda arredondada
-    paddingHorizontal: 12, // Preenchimento horizontal
-    height: 45, // Altura
-    marginBottom: 15, // Margem inferior
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
   },
-  buttons: { // Estilo do container dos botões
-    flexDirection: 'row', // Layout em linha
-    justifyContent: 'space-between', // Espaçamento entre itens
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+    fontSize: 16,
   },
 });
 
-export default SenhaModal; // Exporta o componente
+export default SenhaModal;

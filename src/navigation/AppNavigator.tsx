@@ -1,22 +1,23 @@
 // src/navigation/AppNavigator.tsx
-import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons'; // Importa MaterialCommunityIcons para os ícones das abas
+import { createBottomTabNavigator, BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-import InicialScreen from '../screens/InicialScreen';
 import LoginScreen from '../screens/LoginScreen';
 import CadastroScreen from '../screens/CadastroScreen';
 import FeedNoticiasScreen from '../screens/FeedNoticiasScreen';
 import FeedAnunciosScreen from '../screens/FeedAnunciosScreen';
 import PerfilScreen from '../screens/PerfilScreen';
+import AuthGate from './AuthGate';
+import InicialScreen from '../screens/InicialScreen';
 
-import { RootStackParamList } from './types';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList, MainTabsParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<MainTabsParamList>();
 
 function HeaderRightUserIcon() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -32,18 +33,18 @@ function HeaderRightUserIcon() {
   );
 }
 
+type TabRoute = keyof MainTabsParamList;
+
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }: { route: { name: TabRoute } }) => ({
         headerShown: true,
         headerRight: () => <HeaderRightUserIcon />,
-        tabBarIcon: ({ color, size }) => {
+        tabBarIcon: ({ color, size }: { color: string; size: number }) => {
           if (route.name === 'Notícias') {
-            // Ícone de jornal para a aba Notícias
             return <MaterialCommunityIcons name="newspaper" size={size} color={color} />;
           } else if (route.name === 'Anúncios') {
-            // Ícone de megafone para a aba Anúncios
             return <MaterialCommunityIcons name="bullhorn" size={size} color={color} />;
           }
           return null;
@@ -65,8 +66,16 @@ export default function AppNavigator() {
         <Stack.Screen name="Inicial" component={InicialScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Cadastro" component={CadastroScreen} />
-        <Stack.Screen name="Perfil" component={PerfilScreen} options={{ headerShown: true, title: 'Perfil' }} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen name="MainTabs" component={() => (
+          <AuthGate>
+            <MainTabs />
+          </AuthGate>
+        )} />
+        <Stack.Screen name="Perfil" component={(props: NativeStackScreenProps<RootStackParamList, 'Perfil'>) => (
+          <AuthGate>
+            <PerfilScreen {...props} />
+          </AuthGate>
+        )} options={{ headerShown: true, title: 'Perfil' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

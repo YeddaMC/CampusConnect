@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, Modal, Text, StyleSheet } from 'react-native';
-import { getAuth, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { auth } from '../utils/firebaseService'; // auth centralizado
 
 type Props = {
   visible: boolean;
@@ -10,7 +11,6 @@ type Props = {
 
 const ExcluirContaModal: React.FC<Props> = ({ visible, onClose, onAccountDeleted }) => {
   const [senha, setSenha] = useState('');
-  const auth = getAuth();
   const user = auth.currentUser;
 
   const handleConfirmar = async () => {

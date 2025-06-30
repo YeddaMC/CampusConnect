@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Header from '../components/Header'; // mesmo Header da tela de anúncios
 import Footer from '../components/Footer'; // mesmo Footer da tela de anúncios
@@ -16,9 +17,7 @@ import Footer from '../components/Footer'; // mesmo Footer da tela de anúncios
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 
-import { auth, db } from '../utils/firebaseService';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+const STORAGE_USERS_KEY = '@campusconnect_users'; // novo para múltiplos usuários
 
 type CadastroScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -71,60 +70,51 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Erro', 'Por favor, insira um número de WhatsApp válido (10 a 15 dígitos).');
       return;
     }
-
     setLoading(true);
-
     try {
       const nomeUpperCase = nome.toUpperCase();
       const usernameLowerCase = username.toLowerCase();
-
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      await updateProfile(user, {
-        displayName: usernameLowerCase,
-      });
-
-      const userDocRef = doc(db, 'users', user.uid);
-      await setDoc(userDocRef, {
+      const usersData = await AsyncStorage.getItem(STORAGE_USERS_KEY);
+      const users = usersData ? JSON.parse(usersData) : [];
+      // Impede duplicidade de CPF ou username
+      if (users.some((u: any) => u.cpf === cpf)) {
+        Alert.alert('Erro', 'Já existe um usuário cadastrado com este CPF.');
+        setLoading(false);
+        return;
+      }
+      if (users.some((u: any) => u.username === usernameLowerCase)) {
+        Alert.alert('Erro', 'Já existe um usuário cadastrado com este nome de usuário.');
+        setLoading(false);
+        return;
+      }
+      const user = {
         nome: nomeUpperCase,
         username: usernameLowerCase,
         cpf,
         whatsapp,
         email,
+        password,
         createdAt: new Date().toISOString(),
-      });
-
+      };
+      users.push(user);
+      await AsyncStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users));
       Alert.alert(
         'Sucesso',
         'Cadastro realizado com sucesso! Agora faça o login.',
         [{ text: 'OK', onPress: () => navigation.replace('Login') }]
       );
-    } catch (error: any) {
-      console.error('Erro ao cadastrar:', error);
-      let errorMessage = 'Ocorreu um erro ao tentar realizar o cadastro.';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'O formato do e-mail é inválido.';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'A senha é muito fraca. Ela deve ter no mínimo 6 caracteres (letras ou números).';
-      } else if (error.code === 'auth/network-request-failed') {
-        errorMessage = 'Erro de conexão. Verifique sua internet.';
-      }
-      // Exibe o erro detalhado para debug
-      Alert.alert('Erro', errorMessage + (error.message ? `\n${error.message}` : ''));
+    } catch (error) {
+      Alert.alert('Erro', 'Ocorreu um erro ao tentar realizar o cadastro.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      {/* Reutiliza o Header da tela de anúncios */}
+    <ScrollView contentContainerStyle={styles.container}>
       <Header title="Cadastro" showLogo={true} />
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <View style={styles.content}>
         <TextInput
           style={styles.input}
           placeholder="Nome Completo"
@@ -202,21 +192,20 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.navigate('Login')}
           disabled={loading}
         />
-      </ScrollView>
+      </View>
 
-      {/* Reutiliza o Footer da tela de anúncios, agora sem passar navigation */}
       <Footer />
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: '#fff',
+    padding: 20,
   },
   content: {
-    paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 80, // espaço para o footer
   },

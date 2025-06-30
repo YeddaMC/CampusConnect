@@ -17,7 +17,7 @@ import * as ImagePicker from 'expo-image-picker'; // Ferramenta para seleção d
 import AsyncStorage from '@react-native-async-storage/async-storage'; // Armazenamento local assíncrono
 import { Ionicons } from '@expo/vector-icons'; // Ícones
 
-import { getAuth } from 'firebase/auth'; // Funções de autenticação do Firebase
+import { auth } from '../utils/firebaseService'; // auth centralizado
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Tipo de navegação
 import { RootStackParamList } from '../navigation/types'; // Definição de tipos de rotas
@@ -45,7 +45,6 @@ const { width, height } = Dimensions.get('window'); // Largura e altura da janel
 const NUM_STARS = 50; // Número de estrelas para o fundo
 
 const PerfilScreen: React.FC<Props> = ({ navigation }) => { // Definição do componente PerfilScreen
-  const auth = getAuth(); // Inicializa autenticação Firebase
   const [user] = useState(auth.currentUser); // Obtém usuário logado
   const [imageUri, setImageUri] = useState<string | null>(null); // Estado da URI da imagem de perfil
   const [loading, setLoading] = useState(false); // Estado de carregamento
@@ -133,16 +132,16 @@ const PerfilScreen: React.FC<Props> = ({ navigation }) => { // Definição do co
   };
 
   const handleLogout = async () => { // Função para fazer logout
-    try { // Tenta sair
-      await auth.signOut(); // Desloga do Firebase
-      navigation.dispatch( // Reseta a navegação
-        CommonActions.reset({ // Ação de reset
-          index: 0, // Índice da rota
-          routes: [{ name: 'Inicial' }], // Navega para a rota Inicial
+    try {
+      await AsyncStorage.removeItem('@campusconnect_cpf'); // Remove CPF salvo
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
         })
       );
-    } catch { // Captura erro
-      Alert.alert('Erro', 'Não foi possível sair da conta.'); // Alerta de erro
+    } catch {
+      Alert.alert('Erro', 'Não foi possível sair da conta.');
     }
   };
 
