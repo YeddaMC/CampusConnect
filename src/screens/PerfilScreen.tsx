@@ -223,7 +223,7 @@ const PerfilScreen: React.FC<Props> = ({ navigation }) => { // Definição do co
           </TouchableOpacity>
         </View>
 
-        <Text style={PerfilStyles.userInfo}> {user?.displayName || 'Usuário'}</Text> {/* Nome do usuário */}
+        <Text style={PerfilStyles.userName}> {user?.displayName || 'Usuário'}</Text> {/* Nome do usuário em destaque */}
         <Text style={PerfilStyles.userInfo}>E-mail: {user?.email}</Text> {/* E-mail do usuário */}
 
         {loading ? ( // Se estiver carregando

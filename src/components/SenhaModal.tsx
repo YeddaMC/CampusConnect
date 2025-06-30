@@ -13,22 +13,51 @@ import {
   Keyboard, // Controla o teclado (mantido para utilidades futuras, se necessário)
   ActivityIndicator, // Indicador de carregamento
 } from 'react-native';
-import { getAuth, updatePassword } from 'firebase/auth'; // Funções de autenticação Firebase
+import { getAuth, updatePassword, sendPasswordResetEmail } from 'firebase/auth'; // Adiciona sendPasswordResetEmail
 
-type Props = { // Tipo de props para o componente
+type Props = {
   visible: boolean; // Visibilidade do modal
   onClose: () => void; // Função para fechar o modal
   onPasswordChanged: () => void; // Função chamada após a senha ser alterada
+  modoEsqueciSenha?: boolean; // Novo: modo para "esqueci minha senha"
 };
 
-const SenhaModal: React.FC<Props> = ({ visible, onClose, onPasswordChanged }) => { // Definição do componente SenhaModal
+const SenhaModal: React.FC<Props> = ({ visible, onClose, onPasswordChanged, modoEsqueciSenha }) => {
+  const [email, setEmail] = useState(''); // Novo: estado para email
   const [newPassword, setNewPassword] = useState(''); // Estado da nova senha
   const [confirmPassword, setConfirmPassword] = useState(''); // Estado da confirmação da nova senha
   const [loading, setLoading] = useState(false); // Estado de carregamento
 
   const auth = getAuth(); // Inicializa autenticação Firebase
-  
+
   const handleChangePassword = async () => { // Função para alterar a senha
+    if (modoEsqueciSenha) {
+      // Fluxo de redefinição por e-mail
+      if (!email) {
+        Alert.alert('Erro', 'Informe o e-mail cadastrado.');
+        return;
+      }
+      setLoading(true);
+      try {
+        await sendPasswordResetEmail(auth, email);
+        Alert.alert('Sucesso', 'E-mail de redefinição de senha enviado! Verifique sua caixa de entrada.');
+        setEmail('');
+        onPasswordChanged();
+        onClose();
+      } catch (error: any) {
+        let errorMessage = 'Não foi possível enviar o e-mail de redefinição.';
+        if (error.code === 'auth/user-not-found') {
+          errorMessage = 'E-mail não encontrado.';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = 'E-mail inválido.';
+        }
+        Alert.alert('Erro', errorMessage);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    // Fluxo normal para alteração de senha
     const user = auth.currentUser; // Obtém usuário logado NO MOMENTO DA AÇÃO
 
     if (!user) { // Se não houver usuário logado
@@ -45,8 +74,8 @@ const SenhaModal: React.FC<Props> = ({ visible, onClose, onPasswordChanged }) =>
       Alert.alert('Erro', 'A nova senha e a confirmação não coincidem.'); // Alerta de erro
       return; // Sai da função
     }
-    if (newPassword.length < 6) { // Se nova senha tiver menos de 6 caracteres
-      Alert.alert('Erro', 'A nova senha deve ter pelo menos 6 caracteres.'); // Alerta de erro
+    if (newPassword.length < 4) { // Se nova senha tiver menos de 4 caracteres
+      Alert.alert('Erro', 'A nova senha deve ter pelo menos 4 caracteres.'); // Alerta de erro
       return; // Sai da função
     }
 
@@ -89,29 +118,42 @@ const SenhaModal: React.FC<Props> = ({ visible, onClose, onPasswordChanged }) =>
         style={styles.modalBackground} // Estilo de fundo do modal
       >
         <View style={styles.modalContainer}> {/* Container interno do modal */}
-          <Text style={styles.title}>Alterar Senha</Text> {/* Título do modal */}
+          <Text style={styles.title}>{modoEsqueciSenha ? 'Redefinir Senha' : 'Alterar Senha'}</Text> {/* Título do modal */}
+          {modoEsqueciSenha ? (
+            <TextInput
+              placeholder="E-mail cadastrado" // Placeholder
+              value={email} // Valor do campo
+              onChangeText={setEmail} // Atualiza estado ao digitar
+              style={styles.input} // Estilo do input
+              autoCapitalize="none" // Desabilita capitalização automática
+              keyboardType="email-address" // Tipo de teclado para e-mail
+              editable={!loading} // Desabilita input durante o carregamento
+            />
+          ) : (
+            <> {/* Fragmento vazio para agrupar múltiplos filhos */}
+              <TextInput // Campo de nova senha
+                placeholder="Nova senha" // Placeholder
+                secureTextEntry // Esconde o texto
+                value={newPassword} // Valor do campo
+                onChangeText={setNewPassword} // Atualiza estado ao digitar
+                style={styles.input} // Estilo do input
+                autoCapitalize="none" // Desabilita capitalização automática
+                textContentType="newPassword" // Tipo de conteúdo para autofill
+                editable={!loading} // Desabilita input durante o carregamento
+              />
 
-          <TextInput // Campo de nova senha
-            placeholder="Nova senha" // Placeholder
-            secureTextEntry // Esconde o texto
-            value={newPassword} // Valor do campo
-            onChangeText={setNewPassword} // Atualiza estado ao digitar
-            style={styles.input} // Estilo do input
-            autoCapitalize="none" // Desabilita capitalização automática
-            textContentType="newPassword" // Tipo de conteúdo para autofill
-            editable={!loading} // Desabilita input durante o carregamento
-          />
-
-          <TextInput // Campo de confirmação de nova senha
-            placeholder="Confirme a nova senha" // Placeholder
-            secureTextEntry // Esconde o texto
-            value={confirmPassword} // Valor do campo
-            onChangeText={setConfirmPassword} // Atualiza estado ao digitar
-            style={styles.input} // Estilo do input
-            autoCapitalize="none" // Desabilita capitalização automática
-            textContentType="newPassword" // Tipo de conteúdo para autofill
-            editable={!loading} // Desabilita input durante o carregamento
-          />
+              <TextInput // Campo de confirmação de nova senha
+                placeholder="Confirme a nova senha" // Placeholder
+                secureTextEntry // Esconde o texto
+                value={confirmPassword} // Valor do campo
+                onChangeText={setConfirmPassword} // Atualiza estado ao digitar
+                style={styles.input} // Estilo do input
+                autoCapitalize="none" // Desabilita capitalização automática
+                textContentType="newPassword" // Tipo de conteúdo para autofill
+                editable={!loading} // Desabilita input durante o carregamento
+              />
+            </>
+          )}
 
           <View style={styles.buttons}> {/* Container dos botões */}
             <Button title="Cancelar" color="gray" onPress={onClose} disabled={loading} /> {/* Botão Cancelar */}

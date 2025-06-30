@@ -14,7 +14,7 @@ import Header from '../components/Header'; // mesmo Header da tela de anúncios
 import Footer from '../components/Footer'; // mesmo Footer da tela de anúncios
 
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator'; // ajuste o caminho conforme seu projeto
+import { RootStackParamList } from '../navigation/types';
 
 import { auth, db } from '../utils/firebaseService';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -41,11 +41,12 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleCadastro = async () => {
     // Validações iguais ao seu código
-    if (!nome || !username || !cpf || !whatsapp || !email || !password || !confirmPassword) {
+    if (!nome || !cpf || !whatsapp || !email || !password || !confirmPassword) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-    if (username.length < 3 || /\s/.test(username)) {
+    // username agora é opcional
+    if (username && (username.length < 3 || /\s/.test(username))) {
       Alert.alert('Erro', 'Nome de usuário inválido. Mínimo 3 caracteres, sem espaços.');
       return;
     }
@@ -53,8 +54,8 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Erro', 'As senhas não coincidem.');
       return;
     }
-    if (password.length < 8) {
-      Alert.alert('Erro', 'A senha deve ter no mínimo 8 caracteres.');
+    if (password.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter no mínimo 6 caracteres (letras ou números).');
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -107,11 +108,12 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = 'O formato do e-mail é inválido.';
       } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'A senha é muito fraca. Ela deve ter no mínimo 8 caracteres.';
+        errorMessage = 'A senha é muito fraca. Ela deve ter no mínimo 6 caracteres (letras ou números).';
       } else if (error.code === 'auth/network-request-failed') {
         errorMessage = 'Erro de conexão. Verifique sua internet.';
       }
-      Alert.alert('Erro', errorMessage);
+      // Exibe o erro detalhado para debug
+      Alert.alert('Erro', errorMessage + (error.message ? `\n${error.message}` : ''));
     } finally {
       setLoading(false);
     }
@@ -123,8 +125,6 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
       <Header title="Cadastro" showLogo={true} />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}> </Text>
-
         <TextInput
           style={styles.input}
           placeholder="Nome Completo"
@@ -173,10 +173,10 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
 
         <TextInput
           style={styles.input}
-          placeholder="Senha (mínimo 8 caracteres)"
+          placeholder="Senha (mínimo 6 caracteres, letras ou números)"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          // use secureTextEntry={true}
           editable={!loading}
         />
 
@@ -185,7 +185,7 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
           placeholder="Confirmar Senha"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          secureTextEntry
+          // use secureTextEntry={true}
           editable={!loading}
         />
 
@@ -204,8 +204,8 @@ const CadastroScreen: React.FC<Props> = ({ navigation }) => {
         />
       </ScrollView>
 
-      {/* Reutiliza o Footer da tela de anúncios, passando navigation */}
-      <Footer navigation={navigation} />
+      {/* Reutiliza o Footer da tela de anúncios, agora sem passar navigation */}
+      <Footer />
     </View>
   );
 };

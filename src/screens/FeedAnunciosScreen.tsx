@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, FlatList, TouchableOpacity, Alert, Linking } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { Text as PaperText } from 'react-native-paper';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { MainTabsParamList } from '../navigation/types';
+import { Text } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -12,6 +13,22 @@ import { feedAnunciosScreenStyles } from '../styles/components/feedAnunciosScree
 
 // Dados de exemplo para anúncios (unificado e corrigido)
 const anunciosData = [
+  {
+    id: 'a5',
+    title: 'Notebook à venda',
+    description: 'Notebook seminovo, ótimo estado, ideal para estudos. Interessados chamar no WhatsApp.',
+    date: '30/06/2025',
+    imageUrl: 'https://tse3.mm.bing.net/th/id/OIP.7Ni7A92p963N9huvmTzDggHaEh?pid=Api&P=0&h=180',
+    whatsappNumber: '5511999999999',
+  },
+  {
+    id: 'a6',
+    title: 'Kit Festa',
+    description: 'Kit festa completo. Doces, salgados, bolo, refrigerantes e descartáveis. Falar com Amanda da sala 10.',
+    date: '30/06/2025',
+    imageUrl: 'https://tse4.mm.bing.net/th/id/OIP.QV5_nZLxExe55Kr75XDcbQHaFl?pid=Api&P=0&h=180',
+    whatsappNumber: '5541999999999',
+  },
   {
     id: 'a1',
     title: 'Venda de Livros Usados',
@@ -61,16 +78,28 @@ const openWhatsApp = (phoneNumber: string) => {
     .catch(() => Alert.alert('Erro', 'Não foi possível abrir o WhatsApp'));
 };
 
-type FeedAnunciosScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'FeedAnuncios'
+type FeedAnunciosScreenNavigationProp = BottomTabNavigationProp<
+  MainTabsParamList,
+  'Anúncios'
 >;
 
 type Props = {
   navigation: FeedAnunciosScreenNavigationProp;
 };
 
+const STORAGE_KEY = '@profile_image_uri';
+
 const FeedAnunciosScreen: React.FC<Props> = ({ navigation }) => {
+  const [userPhotoUri, setUserPhotoUri] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadPhoto = async () => {
+      const uri = await AsyncStorage.getItem(STORAGE_KEY);
+      if (uri) setUserPhotoUri(uri);
+    };
+    loadPhoto();
+  }, []);
+
   const renderItem = ({ item }: { item: typeof anunciosData[0] }) => (
     <TouchableOpacity onPress={() => openWhatsApp(item.whatsappNumber)}>
       <NoticiaCard
@@ -87,7 +116,7 @@ const FeedAnunciosScreen: React.FC<Props> = ({ navigation }) => {
       <Header title="Anúncios do Campus" showLogo={true} />
 
       <View style={globalStyles.content}>
-        <PaperText style={feedAnunciosScreenStyles.title}>☺</PaperText>
+        <Text style={feedAnunciosScreenStyles.title}>☺</Text>
         <FlatList
           data={anunciosData}
           renderItem={renderItem}
@@ -97,7 +126,7 @@ const FeedAnunciosScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
 
-      <Footer navigation={navigation} />
+      <Footer />
     </View>
   );
 };

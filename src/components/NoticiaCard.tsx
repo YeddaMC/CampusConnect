@@ -15,9 +15,11 @@ const NoticiaCard: React.FC<NoticiaCardProps> = ({ title, description, date, ima
 
   return (
     <Card style={styles.card}>
-      {imageUrl && <Card.Cover source={{ uri: imageUrl }} style={styles.cardImage} />}
       <Card.Content>
         <Title style={styles.cardTitle}>{title}</Title>
+      </Card.Content>
+      {imageUrl && <Card.Cover source={{ uri: imageUrl }} style={styles.cardImage} />}
+      <Card.Content>
         <Paragraph style={styles.cardDescription}>{description}</Paragraph>
         <Paragraph style={styles.cardDate}>{date}</Paragraph>
       </Card.Content>

@@ -25,6 +25,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SenhaModal from '../components/SenhaModal';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -41,10 +42,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [showSenhaModal, setShowSenhaModal] = useState(false);
 
   const redirectUri = makeRedirectUri();
 
-  const [request, response, promptAsync, revokeAsync] = Google.useAuthRequest({
+  const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: ANDROID_CLIENT_ID,
     iosClientId: IOS_CLIENT_ID,
     webClientId: WEB_CLIENT_ID,
@@ -81,7 +83,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(true);
       signInWithCredential(auth, credential)
         .then(() => {
-          navigation.replace('MainTabs', { screen: 'Notícias' });
+          navigation.replace('MainTabs');
         })
         .catch((error) => {
           console.error('Erro no login Google:', error);
@@ -94,10 +96,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   }, [response]);
 
   const handleGoogleLogin = async () => {
-    if (revokeAsync) {
-      await revokeAsync();
-    }
-    promptAsync({ prompt: 'select_account' });
+    promptAsync();
   };
 
   const handleLogin = async () => {
@@ -105,11 +104,15 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Erro', 'Preencha e-mail e senha.');
       return;
     }
+    if (password.length < 4) {
+      Alert.alert('Erro', 'A senha deve ter pelo menos 4 caracteres.');
+      return;
+    }
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       await AsyncStorage.setItem(STORAGE_EMAIL_KEY, email);
-      navigation.replace('MainTabs', { screen: 'Notícias' });
+      navigation.replace('MainTabs');
     } catch (error: any) {
       let message = 'Erro ao fazer login.';
       if (error.code === 'auth/invalid-email') message = 'E-mail inválido.';
@@ -123,7 +126,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Header showLogo={true} />
+      <Header showLogo={true} title="Login" />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.title}> </Text>
@@ -164,6 +167,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <Button title="Entrar" onPress={handleLogin} />
             <View style={{ height: 15 }} />
             <Button title="Entrar com Google" disabled={!request} onPress={handleGoogleLogin} />
+            <View style={{ height: 15 }} />
+            <Button
+              title="Esqueci minha senha"
+              onPress={() => setShowSenhaModal(true)}
+              disabled={loading}
+            />
           </>
         )}
 
@@ -176,7 +185,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         />
       </ScrollView>
 
-      <Footer navigation={navigation} />
+      <Footer />
+      {showSenhaModal && (
+        <SenhaModal
+          visible={showSenhaModal}
+          onClose={() => setShowSenhaModal(false)}
+          onPasswordChanged={() => setShowSenhaModal(false)}
+        />
+      )}
     </View>
   );
 };

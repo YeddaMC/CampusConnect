@@ -3,7 +3,7 @@ import React from 'react';
 import { View, FlatList, StyleSheet, Linking, Alert, TouchableOpacity } from 'react-native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainTabsParamList } from '../navigation/types';
-import { Text as PaperText } from 'react-native-paper';
+import { Text } from 'react-native-paper';
 
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -11,6 +11,14 @@ import NoticiaCard from '../components/NoticiaCard';
 import { theme, globalStyles } from '../styles/components/globalStyles';
 
 const noticiasData = [
+  {
+    id: '3',
+    title: 'Conheça a Biblioteca do Campus Pinhais',
+    description: 'Convidamos todos os alunos a conhecer e usufruir do espaço da Biblioteca do IFPR Pinhais, um ambiente acolhedor para estudos, pesquisas e leitura.',
+    date: '23/06/2025',
+    imageUrl: 'https://ifpr.edu.br/wp-content/uploads/2024/02/bib_pinhais-1536x864.png',
+    url: 'https://ifpr.edu.br/rede-de-bibliotecas-do-ifpr/nossas-bibliotecas/biblioteca-pinhais/',
+  },
   {
     id: '1',
     title: 'Oficina de Produção de Resumos – V SciTec',
@@ -26,14 +34,6 @@ const noticiasData = [
     date: '24/05/2025',
     imageUrl: 'https://tse2.mm.bing.net/th?id=OIP.RB0YPUCwyMG3N0BYa6D0OwHaE3&pid=Api&P=0&h=180',
     url: 'https://ifpr.edu.br/menu-academico/calendario-academico/',
-  },
-  {
-    id: '3',
-    title: 'Conheça a Biblioteca do Campus Pinhais',
-    description: 'Convidamos todos os alunos a conhecer e usufruir do espaço da Biblioteca do IFPR Pinhais, um ambiente acolhedor para estudos, pesquisas e leitura.',
-    date: '23/06/2025',
-    imageUrl: 'https://ifpr.edu.br/wp-content/uploads/2024/02/bib_pinhais-1536x864.png',
-    url: 'https://ifpr.edu.br/rede-de-bibliotecas-do-ifpr/nossas-bibliotecas/biblioteca-pinhais/',
   },
 ];
 
@@ -75,7 +75,7 @@ const FeedNoticiasScreen: React.FC<Props> = ({ navigation }) => {
       <Header title="  " showLogo={true} />
 
       <View style={globalStyles.content}>
-        <PaperText style={styles.title}>Últimas Notícias</PaperText>
+        <Text style={styles.title}>Últimas Notícias</Text>
         <FlatList
           data={noticiasData}
           renderItem={renderItem}
@@ -85,7 +85,7 @@ const FeedNoticiasScreen: React.FC<Props> = ({ navigation }) => {
         />
       </View>
 
-      <Footer navigation={navigation} />
+      <Footer />
     </View>
   );
 };
